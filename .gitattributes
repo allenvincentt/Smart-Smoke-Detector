@@ -1,0 +1,3 @@
+# The Pi runs these with bash/python: CRLF from a Windows checkout would break them.
+*.sh text eol=lf
+*.py text eol=lf

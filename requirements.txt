@@ -1,0 +1,11 @@
+# Pinned for the Raspberry Pi 4 (aarch64). Every pin below has a prebuilt aarch64 wheel, so the Pi
+# never compiles anything.
+#
+# PySide6-Essentials only (no Addons) to keep storage and RAM low. 6.8.0.2 is the newest release
+# whose aarch64 wheel is tagged manylinux_2_31: from 6.8.1 on they need glibc 2.39, and Raspberry
+# Pi OS Bookworm ships glibc 2.36, so pip would find no installable PySide6 at all. The same wheel
+# also installs on Trixie (Python 3.13), Windows and x86-64 Linux.
+PySide6-Essentials==6.8.0.2
+# BLE central for the ESP32 link (BlueZ/D-Bus on the Pi). QtBluetooth is Addons-only, so not used.
+bleak==3.0.2
+dbus-fast==5.0.22; sys_platform == "linux"
