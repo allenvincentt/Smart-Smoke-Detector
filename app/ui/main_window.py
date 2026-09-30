@@ -255,6 +255,7 @@ class MainWindow(QWidget):
         self.setWindowTitle("Smart Smoke Detector")
         self.setMinimumSize(800, 480)
         self.resize(1024, 600)
+        self._normal_geometry = None  # geometry to go back to on restore
 
         if config.DEMO:
             from app.demo_link import DemoLink
@@ -332,12 +333,15 @@ class MainWindow(QWidget):
         self.top_bar.clock.setText(time.strftime("%H:%M:%S"))
 
     def _toggle_maximized(self) -> None:
-        if self.isFullScreen():
-            return
-        if self.isMaximized():
-            self.showNormal()
-        else:
+        # A maximized frameless window covers the whole screen, so on Windows Qt also flags it
+        # WindowFullScreen; restore from either state (also from the Pi's kiosk full screen).
+        if self._framed():
+            self._normal_geometry = self.geometry()
             self.showMaximized()
+        else:
+            self.showNormal()
+            if self._normal_geometry is not None:
+                self.setGeometry(self._normal_geometry)
 
     def _framed(self) -> bool:
         return not (self.isMaximized() or self.isFullScreen())

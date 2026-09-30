@@ -10,10 +10,8 @@ system events. Owned by the app shell, so it records from startup whichever page
   batched; rows older than LOG_RETENTION_DAYS are pruned.
 """
 
-import csv
 import os
 import sqlite3
-import sys
 import time
 
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
@@ -48,21 +46,6 @@ CREATE INDEX IF NOT EXISTS events_ts ON events (ts);
 _RANK = {CLEAN: 0, PRE: 1, CRIT: 2}
 _DERIVED = {"FLAME_DETECTED", "FLAME_CLEARED", "SENSOR_FAULT", "SENSOR_OK"}  # + STATE_*
 _RESETS = ("BTN_RESET", "APP_RESET")
-
-
-def export_target() -> tuple:
-    """(directory, is_usb). A mounted USB stick on the Pi (/media/<user>/<label>), else DATA_DIR."""
-    if sys.platform.startswith("linux"):
-        user = os.environ.get("USER", "")
-        for base in (os.path.join("/media", user), "/media", "/mnt"):
-            try:
-                entries = sorted(os.scandir(base), key=lambda e: e.name)
-            except OSError:
-                continue
-            for e in entries:
-                if e.is_dir() and os.path.ismount(e.path) and os.access(e.path, os.W_OK):
-                    return e.path, True
-    return os.path.join(config.DATA_DIR, "exports"), False
 
 
 class EventLog(QObject):
@@ -229,25 +212,3 @@ class EventLog(QObject):
                  max(max(coalesce(ppm, 0)), max(coalesce(peak, 0)))
                FROM events WHERE ts >= ?""", (since,)).fetchone()
         return dict(zip(("breaches", "crit", "pre", "fire", "user", "peak"), r))
-
-    def export_csv(self, category: str | None, since: float) -> tuple:
-        """Write matching rows (oldest first) to CSV. Returns (path, row count, is_usb)."""
-        self._db.commit()
-        folder, usb = export_target()
-        os.makedirs(folder, exist_ok=True)
-        path = os.path.join(folder, time.strftime("smokedetect-events-%Y%m%d-%H%M%S.csv"))
-        where, args = self._where(category, since)
-        rows = self._db.execute(
-            f"SELECT ts, uptime, category, text, code, source, ppm, level, detail, duration, peak "
-            f"FROM events {where} ORDER BY ts, id", args)
-        count = 0
-        with open(path, "w", newline="", encoding="utf-8") as f:
-            w = csv.writer(f)
-            w.writerow(("timestamp", "esp32_uptime_s", "category", "event", "code", "source", "ppm",
-                        "level", "detail", "duration_s", "peak_ppm"))
-            for ts, uptime, *rest, duration, peak in rows:
-                w.writerow((time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)),
-                            "" if uptime is None else f"{uptime:.1f}", *("" if v is None else v for v in rest),
-                            "" if duration is None else f"{duration:.1f}", "" if peak is None else peak))
-                count += 1
-        return path, count, usb

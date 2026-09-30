@@ -1,6 +1,5 @@
 """Event & alarm logger: timestamped log of threshold breaches, user interventions and system
-events, read from the always-on EventLog (app/event_log.py). Filter by category and time range;
-export the current view to CSV (USB stick on the Pi when one is mounted)."""
+events, read from the always-on EventLog (app/event_log.py). Filter by category and time range."""
 
 import time
 
@@ -221,19 +220,12 @@ class LogsPage(QWidget):
             btn = self._chip(label, lambda _=False, s=seconds: self._set_range(s))
             self._range_buttons.append((btn, seconds))
             controls.addWidget(btn)
-        controls.addSpacing(18)
-        self.export_btn = HudButton("EXPORT CSV", T.GREEN)
-        self.export_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.export_btn.clicked.connect(self._export)
-        controls.addWidget(self.export_btn)
         summary_panel.body.setSpacing(10)
         summary_panel.body.addLayout(controls)
 
         self.table = LogTable()
-        self.toast = Toast()
         table_panel = HudPanel()
         table_panel.body.addWidget(self.table, 1)
-        table_panel.body.addWidget(self.toast)
 
         col = QVBoxLayout(self)
         col.setContentsMargins(0, 0, 0, 0)
@@ -304,35 +296,3 @@ class LogsPage(QWidget):
     def showEvent(self, event) -> None:
         self._reload()  # time ranges are relative to now
         super().showEvent(event)
-
-    def _export(self) -> None:
-        try:
-            path, count, usb = self._log.export_csv(self._category, self._since())
-        except OSError as exc:
-            self.toast.show_message(f"EXPORT FAILED · {exc.strerror or exc}", T.RED)
-            return
-        where = "USB" if usb else "LOCAL"
-        self.toast.show_message(f"EXPORTED {count} ROWS → {where} · {path}", T.GREEN)
-
-
-class Toast(QWidget):
-    """One-line status message under the table (export result)."""
-
-    def __init__(self, parent=None) -> None:
-        super().__init__(parent)
-        self._text, self._color = "", T.TEXT_DIM
-        self._font = T.font(11, QFont.DemiBold, spacing=1)
-        self.setFixedHeight(18)
-        self.hide()
-
-    def show_message(self, text: str, color) -> None:
-        self._text, self._color = text, color
-        self.show()
-        self.update()
-
-    def paintEvent(self, _event) -> None:
-        p = QPainter(self)
-        p.setFont(self._font)
-        p.setPen(self._color)
-        p.drawText(QRectF(4, 0, self.width() - 8, self.height()), Qt.AlignLeft | Qt.AlignVCenter,
-                   p.fontMetrics().elidedText(self._text, Qt.ElideMiddle, self.width() - 8))

@@ -41,7 +41,6 @@ The Pi's case fan is the ESP32's exhaust fan and is off in clean air, so give th
 
 The event & alarm log is a SQLite file created automatically on first run (no database setup):
 `~/.local/share/smart-smoke-detector/events.db` on the Pi, `%LOCALAPPDATA%\smart-smoke-detector\events.db` on Windows.
-CSV exports go to a plugged-in USB stick, otherwise to the `exports` folder next to the log.
 The app's own log is kept in RAM (`$XDG_RUNTIME_DIR/smart-smoke-detector.log`).
 
 See [CLAUDE.md](CLAUDE.md) for performance guidelines.
