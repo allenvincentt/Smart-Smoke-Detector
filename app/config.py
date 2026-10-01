@@ -6,7 +6,7 @@ import tempfile
 
 
 def _data_dir() -> str:
-    """Persistent per-machine app data (event log, CSV exports) — never inside the repo."""
+    """Persistent per-machine app data (event log) — never inside the repo."""
     if os.environ.get("SSD_DATA_DIR"):
         return os.environ["SSD_DATA_DIR"]
     if sys.platform == "win32":

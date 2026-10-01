@@ -23,7 +23,7 @@ Needs Raspberry Pi OS **64-bit with desktop** (Bookworm or Trixie). The Pi's onb
 2. Copy `dist/smart-smoke-detector-<version>-installer.sh` to the Pi and run it once, as the desktop user:
 
    ```bash
-   bash smart-smoke-detector-0.1.0-installer.sh
+   bash smart-smoke-detector-0.2.0-installer.sh
    ```
 
 It unpacks the app to `~/smart-smoke-detector`, adds the few system libraries Qt needs, enables
